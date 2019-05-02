@@ -1,14 +1,20 @@
 import os
 
-dockwidget_title_bar = """
+main_window_layout = """
+            QWidget{
+                background-color: rgb(250,250,210);
+                margin:5px;
+            }
+            """
+
+userstats_title_bar = """
             QLabel{
                 color: rgb(0, 0, 0);
                 font: Times New Roman;
                 font-family: New Century Schoolbook;
                 font-size: 12pt;
                 font-weight: bold;
-                background: qradialgradient(cx:0, cy:0, radius: 1,
-              fx:0.5, fy:0.5, stop:0 red, stop:1 rgb(50,205,50));
+                background: qradialgradient(cx:0, cy:0, radius: 1, fx:0.5, fy:0.5, stop:0 rgb(25, 255, 217), stop:1 rgb(0,204, 68));
                 border-radius: 5px;
                 border-width: 2px;
                 border-style: solid;
@@ -16,6 +22,71 @@ dockwidget_title_bar = """
                 text-align: right;
             }
             """
+
+status_title_bar = """
+            QLabel{
+                color: rgb(0, 0, 0);
+                font: Times New Roman;
+                font-family: New Century Schoolbook;
+                font-size: 12pt;
+                font-weight: bold;
+                background: qradialgradient(cx:0, cy:0, radius: 1, fx:0.5, fy:0.5, stop:0 rgb(25, 255, 217), stop:1 rgb(0,204, 68));
+                border-radius: 5px;
+                border-width: 2px;
+                border-style: solid;
+                border-color: black;
+                text-align: right;
+            }
+            """
+
+running_cont_title_bar = """
+            QLabel{
+                color: rgb(0, 0, 0);
+                font: Times New Roman;
+                font-family: New Century Schoolbook;
+                font-size: 12pt;
+                font-weight: bold;
+                background: qradialgradient(cx:0, cy:0, radius: 1, fx:0.5, fy:0.5, stop:0 rgb(128, 255, 128), stop:1 rgb(128, 0, 255));
+                border-radius: 5px;
+                border-width: 2px;
+                border-style: solid;
+                border-color: black;
+                text-align: right;
+            }
+            """
+
+enqueued_cont_title_bar = """
+            QLabel{
+                color: rgb(0, 0, 0);
+                font: Times New Roman;
+                font-family: New Century Schoolbook;
+                font-size: 12pt;
+                font-weight: bold;
+                background: qradialgradient(cx:0, cy:0, radius: 1, fx:0.5, fy:0.5, stop:0 rgb(25, 102, 255), stop:1 rgb(25, 255, 102));
+                border-radius: 5px;
+                border-width: 2px;
+                border-style: solid;
+                border-color: black;
+                text-align: right;
+            }
+            """
+
+history_title_bar = """
+            QLabel{
+                color: rgb(0, 0, 0);
+                font: Times New Roman;
+                font-family: New Century Schoolbook;
+                font-size: 12pt;
+                font-weight: bold;
+                background: qradialgradient(cx:0, cy:0, radius: 1, fx:0.5, fy:0.5, stop:0 rgb(255, 25, 255), stop:1 rgb(68, 0, 204));
+                border-radius: 5px;
+                border-width: 2px;
+                border-style: solid;
+                border-color: black;
+                text-align: right;
+            }
+            """
+
 
 dockwidget_layout = """
             QWidget{

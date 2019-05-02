@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, time
 from pyqt_interface import css_layout
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMainWindow, QWidget, QListWidget, QTextEdit, QApplication
@@ -11,37 +11,37 @@ class Window(QMainWindow):
     def __init__(self):
         super(Window, self).__init__()
         title = "DockAble Application"
-        top = 400
-        left = 400
-        width = 600
-        height = 500
 
-        icon = "icon.png"
-
-        #self.setWindowTitle(title)
-        #self.setGeometry(top,left, width, height)
         self.main_window_screen_resize()
-        self.main_window_color()
-        #self.setWindowIcon(QIcon("icon.png"))
+        self.main_window_layout()
 
         self.textEdit = QTextEdit()
         self.setCentralWidget(None)
 
-        self.dock_userstat()
-        self.dock_enqueued()
-        self.dock_running_continers()
-        self.dock_finished_containers()
-        self.dock_history()
+        # Initialize SubWindow variables. All are QDockWidget object
+        self.status_dock = None
+        self.user_stats_dock = None
+        self.running_containers_dock = None
+        self.enqueued_dock = None
+        self.history_dock = None
+        self.initialize_subwindows()
+
+    # Load the sub windows for the first time
+    def initialize_subwindows(self):
+        self.status_dock = self.dock_userstats()
+        self.user_stats_dock = self.dock_status()
+        self.running_containers_dock = self.dock_running_continers()
+        self.enqueued_dock = self.dock_enqueued_containers()
+        self.history_dock = self.dock_history()
 
     def main_window_screen_resize(self):
-        self.setWindowState(QtCore.Qt.WindowMaximized)
+        self.showMaximized()
+        #self.setWindowState(QtCore.Qt.WindowMaximized)
         self.setWindowTitle("  DopQ LMU AugenKlinik")
 
+    def main_window_layout(self):
+        self.setStyleSheet(css_layout.main_window_layout)
 
-    def main_window_color(self):
-        self.setStyleSheet("background-color: rgb(250,250,210); "
-                           "margin:5px; "
-                           "border:0px solid rgb(0, 255, 0);")
 
     def subdoc_font_customization(self):
         current_font = self.font()
@@ -51,10 +51,35 @@ class Window(QMainWindow):
 
         return current_font
 
-    def subdoc_custom_title_bar(self):
-        label = QLabel("                                     ~~~ User Statistics ~~~"
-                       "\n                                   --------------------------------")
-        label.setStyleSheet(css_layout.dockwidget_title_bar)
+    def subdoc_custom_title_bar(self, subwin_name):
+        label = None
+
+        if subwin_name == "userstats":
+            label = QLabel("                                                     ~~~ User Statistics ~~~"
+                           "\n                                                     ----------------------------------")
+            label.setStyleSheet(css_layout.userstats_title_bar)
+
+        elif subwin_name == "status":
+            label = QLabel("                                                     ~~~ Status ~~~"
+                           "\n                                                     -----------------------")
+            label.setStyleSheet(css_layout.status_title_bar)
+
+        elif subwin_name == "running":
+            label = QLabel("                                             ~~~ Running Containers ~~~"
+                           "\n                                             -----------------------------------------")
+            label.setStyleSheet(css_layout.running_cont_title_bar)
+
+        elif subwin_name == "enqueued":
+            label = QLabel("                                             ~~~ Enqueued Containers ~~~"
+                           "\n                                             -------------------------------------------")
+            label.setStyleSheet(css_layout.enqueued_cont_title_bar)
+
+        elif subwin_name == "history":
+            label = QLabel("                                                  ~~~ History ~~~"
+                           "\n                                                  ------------------------")
+            label.setStyleSheet(css_layout.history_title_bar)
+
+
         return label
 
     def screen_geometry_details(self):
@@ -64,19 +89,28 @@ class Window(QMainWindow):
         print("Screen_Height: ", rect.height())
         return rect.height(), rect.width()
 
-    def dock_enqueued(self):
+    def dock_header(self):
         dock = QDockWidget(self)
-        dock.setWindowTitle("~~~ Enqueued ~~~")
-        dock.setTitleBarWidget(self.subdoc_custom_title_bar())
+        dock.setTitleBarWidget(self.subdoc_custom_title_bar("header"))
+        dock.setFeatures(dock.NoDockWidgetFeatures)
+        height, width = self.screen_geometry_details()
+        dock.setFixedWidth(width)
+        dock.setFixedHeight(height // 10 ) # 10% of total height
+
+
+    def dock_status(self):
+        dock = QDockWidget(self)
+        #dock.setWindowTitle("~~~ Current Status ~~~")
+        dock.setTitleBarWidget(self.subdoc_custom_title_bar("status"))
         dock.setFont(self.subdoc_font_customization())
         dock.setFeatures(dock.NoDockWidgetFeatures)
 
         height, width = self.screen_geometry_details()
         dock.setFixedWidth(width//2)
-        dock.setFixedHeight(height//2 - 10)
+        dock.setFixedHeight(height//5 - 10) # 1/5th of total height
 
         dock.setStyleSheet(css_layout.dockwidget_layout)
-        dock.setAllowedAreas(Qt.RightDockWidgetArea)
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea)
         self.data = ["Entry 1", "======================\nRexa", "Pear", "Banana",
                         "App", "Melon", "Pear", "Banana",
                         "App", "Melon", "Pear", "Banana",
@@ -88,25 +122,23 @@ class Window(QMainWindow):
         self.listwidget = QListWidget(dock)
         self.listwidget.addItems(self.data)
         dock.setWidget(self.listwidget)
-        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        self.addDockWidget(Qt.LeftDockWidgetArea, dock)
 
-    def dock_userstat(self):
+    def dock_userstats(self):
         dock = QDockWidget(self)
-        dock.setWindowTitle("~~~ User Statistics ~~~")
-        dock.setTitleBarWidget(self.subdoc_custom_title_bar())
+        #dock.setWindowTitle("~~~ User Statistics ~~~")
+        dock.setTitleBarWidget(self.subdoc_custom_title_bar("userstats"))
         dock.setFont(self.subdoc_font_customization())
         dock.setFeatures(dock.NoDockWidgetFeatures)
 
         height, width = self.screen_geometry_details()
         dock.setFixedWidth(width//2)
-        dock.setFixedHeight(height//2 - 10)
+        dock.setFixedHeight(height//5 - 10) # 1/5th of total height
 
         dock.setStyleSheet(css_layout.dockwidget_layout)
-        '''dock.setStyleSheet("background-color: rgb(128, 0, 128); "
-                           "margin:5px; "
-                           "border:7px solid rgb(255, 255, 240);")'''
+
         dock.setAllowedAreas(Qt.RightDockWidgetArea)
-        self.myfruit = ["App", "Melon", "Pear", "Banana",
+        self.data = ["App", "Melon", "Pear", "Banana",
                         "App", "Melon", "Pear", "Banana",
                         "App", "Melon", "Pear", "Banana",
                         "App", "hfdjh", "Pear", "Banana",
@@ -114,23 +146,121 @@ class Window(QMainWindow):
                         "App", "Melon", "shetw", "Banana",
                         "dhfjhd", "sdh", "Pear", "erere"]
         self.listwidget = QListWidget(dock)
-        self.listwidget.addItems(self.myfruit)
+        self.listwidget.addItems(self.data)
         dock.setWidget(self.listwidget)
         self.addDockWidget(Qt.RightDockWidgetArea, dock)
 
     def dock_running_continers(self):
         dock = QDockWidget(self)
-        dock.setWindowTitle("~~~ Running Containers ~~~")
+        #dock.setWindowTitle("~~~ Running Containers ~~~")
+        dock.setTitleBarWidget(self.subdoc_custom_title_bar("running"))
+        dock.setFont(self.subdoc_font_customization())
+        dock.setFeatures(dock.NoDockWidgetFeatures)
+
+        height, width = self.screen_geometry_details()
+        dock.setFixedWidth(width//2)
+        dock.setFixedHeight((height*4)//5 - 20) # 80% of the height
+
+        dock.setStyleSheet(css_layout.dockwidget_layout)
+        dock.setAllowedAreas(Qt.LeftDockWidgetArea)
+        self.data = ["Entry 1", "======================\nRexa", "Pear", "Banana",
+                        "App", "Melon", "Pear", "Banana",
+                        "App", "Melon", "Pear", "Banana",
+                        "App", "hfdjh", "Pear", "Banana",
+                        "Entry 2", "======================", "Pear", "Banana",
+                        "App", "Melon", "shetw", "Banana",
+                        "dhfjhd", "sdh", "Pear", "erere",
+                        "Entry 3", "======================", "Pear", "Banana",
+                        "App", "Melon", "shetw", "Banana",
+                        "dhfjhd", "sdh", "Pear", "erere"]
+
+        self.listwidget = QListWidget(dock)
+        self.listwidget.addItems(self.data)
+        dock.setWidget(self.listwidget)
+        self.addDockWidget(Qt.LeftDockWidgetArea, dock)
+
+    def dock_enqueued_containers(self):
+        dock = QDockWidget(self)
+        #dock.setWindowTitle("~~~ Enqueued Containers ~~~")
+        dock.setTitleBarWidget(self.subdoc_custom_title_bar("enqueued"))
+        dock.setFont(self.subdoc_font_customization())
+        dock.setFeatures(dock.NoDockWidgetFeatures)
+
+        height, width = self.screen_geometry_details()
+        dock.setFixedWidth(width // 2)
+        dock.setFixedHeight((height//5) * 2 - 12)
+
+        dock.setStyleSheet(css_layout.dockwidget_layout)
+        dock.setAllowedAreas(Qt.RightDockWidgetArea)
+        self.data = ["Entry 1", "======================\nRexa", "Pear", "Banana",
+                         "App", "Melon", "Pear", "Banana",
+                         "App", "Melon", "Pear", "Banana",
+                         "App", "hfdjh", "Pear", "Banana",
+                         "Entry 2", "======================", "Pear", "Banana",
+                         "App", "Melon", "shetw", "Banana",
+                         "dhfjhd", "sdh", "Pear", "erere"]
+
+        self.listwidget = QListWidget(dock)
+        self.listwidget.addItems(self.data)
+        dock.setWidget(self.listwidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+
+    def dock_history(self):
+        dock = QDockWidget(self)
+        #dock.setWindowTitle("~~~ History ~~~")
+        dock.setTitleBarWidget(self.subdoc_custom_title_bar("history"))
+        dock.setFont(self.subdoc_font_customization())
+        dock.setFeatures(dock.NoDockWidgetFeatures)
+
+        height, width = self.screen_geometry_details()
+        dock.setFixedWidth(width // 2)
+        dock.setFixedHeight((height//5) * 2 - 12)
+
+        dock.setStyleSheet(css_layout.dockwidget_layout)
+        dock.setAllowedAreas(Qt.RightDockWidgetArea)
+        self.data = ["Entry 1", "======================\nRexa", "Pear", "Banana",
+                         "App", "Melon", "Pear", "Banana",
+                         "App", "Melon", "Pear", "Banana",
+                         "App", "hfdjh", "Pear", "Banana",
+                         "Entry 2", "======================", "Pear", "Banana",
+                         "App", "Melon", "shetw", "Banana",
+                         "dhfjhd", "sdh", "Pear", "erere"]
+
+        self.listwidget = QListWidget(dock)
+        self.listwidget.addItems(self.data)
+        dock.setWidget(self.listwidget)
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
+
+
+"""
+    Each subwindow is a QDockWidget instance
+"""
+'''
+class SubWindow(Window):
+    def __init__(self):
+        super(SubWindow, self).__init__()
+
+        self.status_dock = self.subwindow_status()
+
+    def subdoc_custom_title_bar(self):
+        label = QLabel("                                     ~~~ Status ~~~"
+                       "\n                                   ---------------")
+        label.setStyleSheet(css_layout.userstats_title_bar)
+        return label
+
+    def subwindow_status(self):
+        dock = QDockWidget(self)
+        dock.setWindowTitle("~~~ Current Status ~~~")
         dock.setTitleBarWidget(self.subdoc_custom_title_bar())
         dock.setFont(self.subdoc_font_customization())
         dock.setFeatures(dock.NoDockWidgetFeatures)
 
         height, width = self.screen_geometry_details()
         dock.setFixedWidth(width//2)
-        dock.setFixedHeight(height//3 - 10)
+        dock.setFixedHeight(height//2 - 10)
 
         dock.setStyleSheet(css_layout.dockwidget_layout)
-        dock.setAllowedAreas(Qt.LeftDockWidgetArea)
+        dock.setAllowedAreas(Qt.RightDockWidgetArea)
         self.data = ["Entry 1", "======================\nRexa", "Pear", "Banana",
                         "App", "Melon", "Pear", "Banana",
                         "App", "Melon", "Pear", "Banana",
@@ -142,98 +272,22 @@ class Window(QMainWindow):
         self.listwidget = QListWidget(dock)
         self.listwidget.addItems(self.data)
         dock.setWidget(self.listwidget)
-        self.addDockWidget(Qt.LeftDockWidgetArea, dock)
+        self.addDockWidget(Qt.RightDockWidgetArea, dock)
 
-    def dock_finished_containers(self):
-        dock = QDockWidget(self)
-        dock.setWindowTitle("~~~ Finished ~~~")
-        dock.setTitleBarWidget(self.subdoc_custom_title_bar())
-        dock.setFont(self.subdoc_font_customization())
-        dock.setFeatures(dock.NoDockWidgetFeatures)
+        return dock
 
-        height, width = self.screen_geometry_details()
-        dock.setFixedWidth(width // 2)
-        dock.setFixedHeight(height // 3 - 10)
-
-        dock.setStyleSheet(css_layout.dockwidget_layout)
-        dock.setAllowedAreas(Qt.LeftDockWidgetArea)
-        self.data = ["Entry 1", "======================\nRexa", "Pear", "Banana",
-                         "App", "Melon", "Pear", "Banana",
-                         "App", "Melon", "Pear", "Banana",
-                         "App", "hfdjh", "Pear", "Banana",
-                         "Entry 2", "======================", "Pear", "Banana",
-                         "App", "Melon", "shetw", "Banana",
-                         "dhfjhd", "sdh", "Pear", "erere"]
-
-        self.listwidget = QListWidget(dock)
-        self.listwidget.addItems(self.data)
-        dock.setWidget(self.listwidget)
-        self.addDockWidget(Qt.LeftDockWidgetArea, dock)
-
-    def dock_history(self):
-        dock = QDockWidget(self)
-        dock.setWindowTitle("~~~ History ~~~")
-        dock.setTitleBarWidget(self.subdoc_custom_title_bar())
-        dock.setFont(self.subdoc_font_customization())
-        dock.setFeatures(dock.NoDockWidgetFeatures)
-
-        height, width = self.screen_geometry_details()
-        dock.setFixedWidth(width // 2)
-        dock.setFixedHeight(height // 3 - 10)
-
-        dock.setStyleSheet(css_layout.dockwidget_layout)
-        dock.setAllowedAreas(Qt.LeftDockWidgetArea)
-        self.data = ["Entry 1", "======================\nRexa", "Pear", "Banana",
-                         "App", "Melon", "Pear", "Banana",
-                         "App", "Melon", "Pear", "Banana",
-                         "App", "hfdjh", "Pear", "Banana",
-                         "Entry 2", "======================", "Pear", "Banana",
-                         "App", "Melon", "shetw", "Banana",
-                         "dhfjhd", "sdh", "Pear", "erere"]
-
-        self.listwidget = QListWidget(dock)
-        self.listwidget.addItems(self.data)
-        dock.setWidget(self.listwidget)
-        self.addDockWidget(Qt.LeftDockWidgetArea, dock)
-
-'''
-class mywindow(QMainWindow):
-    def __init__(self):
-        super(mywindow, self).__init__()
-        self.setCentralWidget(None)
-        self.main_window_screen_resize()
-        self.main_window_color()
-        self.topleftdockwindow()
-
-    def main_window_screen_resize(self):
-        QWidget.showMaximized(self)
-
-    def main_window_color(self):
-        self.setStyleSheet("background-color: rgb(15,150,119); "
-                           "margin:5px; "
-                           "border:1px solid rgb(0, 255, 0);")
-
-    def topleftdockwindow(self):
-        topleft_window = QDockWidget('Info',self)
-        topleft_window.setStyleSheet("background-color: rgb(212,150,119);\
-                                     margin:5px; \
-                                     border:5px solid rgb(255, 120, 0);")
-        topleft_window.resize(50,60)
-        # Stick window to left or right
-        topleft_window.setAllowedAreas(Qt.NoDockWidgetArea)
-        self.addDockWidget(Qt.TopDockWidgetArea, topleft_window)
-
-        #topleftwindow.setWidget()
-        #topleftwindow.resize( topleftwindow.minimumSize())
-        #bottomleftwindow = QDockWidget("Matplot",self)
-        #bottomleftwindow.setAllowedAreas(Qt.LeftDockWidgetArea | Qt.RightDockWidgetArea)
-        #self.addDockWidget(Qt.BottomDockWidgetArea, bottomleftwindow)
-        #bottomleftwindow.setWidget(createplotwidget())
-        #self.setDockNestingEnabled(True)
-        #topleftwindow.resize( topleftwindow.minimumSize() )
-        #self.splitDockWidget(topleftwindow, bottomleftwindow , Qt.Vertical)
-'''
-
+    def update_doc(self, dock):
+        list_widget = dock.widget()
+        self.data = ["Updated Entry", "======================\nMikayla", "Markus", "Banana",
+                     "App", "Melon", "Pear", "Banana",
+                     "App", "Melon", "Pear", "Banana",
+                     "App", "hfdjh", "Pear", "Banana"]
+        list_widget.addItems(self.data)
+        dock.setWidget(list_widget)
+        
+        #self.addDockWidget(Qt.RightDockWidgetArea, dock)
+        return dock
+        '''
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
@@ -241,4 +295,5 @@ if __name__ == '__main__':
     app.setStyle("Fusion")
     mainWin = Window()
     mainWin.show()
+
     sys.exit(app.exec_())
