@@ -100,3 +100,31 @@ dockwidget_layout = """
                 border-style: solid;
             }
             """
+
+# Layout for the Main Window Header section
+
+dockwidget_main_header_layout = """
+            QWidget{
+                color: rgb(250,250,210);
+                font: Times New Roman;
+                font-size: 13pt;
+                background: qradialgradient(cx:0, cy:0, radius: 1, fx:0.5, fy:0.5, stop:0 rgb(0, 255, 25), stop:1 rgb(25, 25, 255));
+                border-radius: 10px;
+                border-width: 3px;
+                border-color: rgb(75, 75, 75);
+                border-style: solid;
+            }
+            """
+
+main_header_label_layout = """
+            QLabel{
+                color: rgb(0, 0,210);
+                font: Times New Roman;
+                font-size: 13pt;
+                font-weight: bold;
+                border-radius: 10px;
+                border-width: 3px;
+                border-color: rgb(75, 75, 75);
+                border-style: solid;
+            }
+            """
