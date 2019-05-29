@@ -2,26 +2,87 @@ from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtWidgets import QMainWindow, QWidget, QListWidget, QTextEdit, QApplication
 
 import sys
-import  pyqt_interface.qt_display_process as display_process
-from pyqt_interface.base_window_controller import Window, SubWindow
+from  pyqt_interface import qt_display_process
+from pyqt_interface.base_window_controller import Window
+from PyQt5.QtCore import Qt
 from utils import log
 
 LOG = log.get_module_log(__name__)
 
 def qt_main(dopq):
     app = QtWidgets.QApplication(sys.argv)
-    mywindow = InterfacePyQT(dopq)
-    mywindow.show()
-    #mywindow()
+    window_obj = InterfacePyQT()
+    window_obj.show()
+    window_obj.thread_connector(dopq)
     sys.exit(app.exec_())
 
 
+
 class InterfacePyQT(Window):
-    def __init__(self, dopq, interval=1):
+    def __init__(self):
         super(InterfacePyQT, self).__init__()
-        self.dock_widget_list = self.initialize_subwindows()
-        self.dopq = dopq
+        #self.dock_widget_list = self.initialize_subwindows()
+        #self.dopq = dopq
         #self.subwindows = self.split_screen()
+
+    # Function for updating dock widgets
+    # Data sent from QThread using signal
+
+    def update_status_widget_from_thread_test(self, data):
+        print("call is in update_widget_from_thread_test ")
+        list_widget = self.status_dock.widget()
+        final_string = "Status Entry:\n---------------\n"
+        for key, val in data.items():
+            if (key == "Provider Status"):
+                final_string += "\n"
+
+            final_string += key + " : " + val
+            final_string += " | "
+        final_string += "\n"
+        list_widget.addItems([final_string])
+        self.status_dock.setWidget(list_widget)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.status_dock)
+
+    def update_enqueue_widget_from_thread_test(self, data):
+        print("call is in update_widget_from_thread_test ")
+        list_widget = self.enqueued_dock.widget()
+        final_string = "Enqueued Containers Entry:\n--------------------------------\n"
+        for key, val in data.items():
+            if (key == "provider status"):
+                final_string += "\n"
+
+            final_string += key + " : " + val
+            final_string += " | "
+
+        final_string += "\n"
+        list_widget.addItems([final_string])
+        self.enqueued_dock.setWidget(list_widget)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.enqueued_dock)
+
+    def update_runnning_widget_from_thread_test(self, data):
+        print("call is in update_widget_from_thread_test ")
+        list_widget = self.running_containers_dock.widget()
+        print(self.running_containers_dock)
+        final_string = "Running Containers Entry:\n------------------------------\n"
+        for key, val in data.items():
+            if (key == "provider status"):
+                final_string += "\n"
+
+            final_string += key + " : " + val
+            final_string += " | "
+
+        final_string += "\n"
+        list_widget.addItems([final_string])
+        self.running_containers_dock.setWidget(list_widget)
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.running_containers_dock)
+
+    def thread_connector(self, dopq):
+        self.thread_obj = qt_display_process.QThreadWorker(dopq)
+        LOG.info('Call is in : {}'.format("thread_connector function"))
+        self.thread_obj.sig1.connect(self.update_status_widget_from_thread_test)
+        self.thread_obj.sig2.connect(self.update_runnning_widget_from_thread_test)
+        self.thread_obj.sig3.connect(self.update_enqueue_widget_from_thread_test)
+        self.thread_obj.start()
 
     def __call__(self, *args, **kwargs):
         """
@@ -30,52 +91,6 @@ class InterfacePyQT(Window):
         :param kwargs: not used
         :return: None
         """
-
-        while True:
-            # display information in the subwindows
-            self.print_information()
+        pass
 
 
-    def sub_dock_update(self, parent, func, dockwidget):
-        """
-        Function call for updating sub-windows/ Dock Widgets
-        :param :
-        :return: None
-        """
-        LOG.info('Command is in: {}'.format("call() is in sub_dock_update"))
-        return SubWindow(parent, func, dockwidget)
-
-    """
-        Wrapper for initializing subwindows from parent Window class
-    """
-    def split_screen(self):
-        #sub_win_objs = self.initialize_subwindows()
-        LOG.info('Command is in: {}'.format("call() is in split_screen"))
-        # create subwindows
-        subwindows = {
-            'status': self.sub_dock_update(self, display_process.Status, self.dock_widget_list[0]),
-            'containers': self.sub_dock_update(self, display_process.RunningContainers, self.dock_widget_list[2]),
-            'userstats': self.sub_dock_update(self, display_process.UserStats, self.dock_widget_list[1]),
-            'enqueued': self.sub_dock_update(self, display_process.EnqueuedContainers, self.dock_widget_list[3]),
-            'history': self.sub_dock_update(self, display_process.History, self.dock_widget_list[4])
-        }
-
-
-        return subwindows
-
-    def print_information(self):
-        """
-        wrapper for calling all subwindow functions
-        :return:
-        """
-
-        for sub in list(self.subwindows.values()):
-            LOG.info('Command is in: {}'.format("call() is in print_information"))
-            sub()
-
-if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
-    #app.setStyle("Fusion")
-    mainWin = InterfacePyQT("")
-
-    sys.exit(app.exec_())
