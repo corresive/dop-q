@@ -1,6 +1,5 @@
 import copy
 from collections import OrderedDict
-from pyqt_interface.base_window_controller import DisplayFunction
 from PyQt5.QtCore import pyqtSignal, QThread
 
 from math import floor, ceil
@@ -10,66 +9,90 @@ from utils import log
 LOG = log.get_module_log(__name__)
 
 
-def fetch_running_containers_info(dopq):
-    information = []
-    containers = copy.copy(dopq.running_containers)
-    for container in dopq.running_containers:
-        print("container: ", container.container_stats())
-        information.append(container.container_stats())
-
-        # reformat gpu info
-        gpu_info = information[-1].pop('gpu', False)
-        if gpu_info:
-            minors, usages = [], []
-            for info in gpu_info:
-                minors.append(info['id'])
-                usages.append(info['usage'])
-            information[-1]['id'] = minors
-            information[-1]['usage'] = ''.join([str(usage) + '% ' for usage in usages])
-
-    infor = {}
-    infor['Enqueued Status'] = 'Still Running ...'
-    infor['Container Name'] = 'Captain Loser'
-    infor['Container starttime'] = '15:45, 1971'
-
-    return infor
-
-
-def fetch_enqueued_containers_info(dopq):
-    information = {}
-    information['Enqueued Status'] = 'Still Running ...'
-    information['Container Name'] = 'Captain Loser'
-    information['Container starttime'] = '15:45, 1971'
-
-    return information
-
-
-def fetch_status_info(dopq):
-    information = {}
-    information['Name'] = 'Reza ...'
-    information['Purpose'] = 'Testing'
-
-    information['Queue Status'] = dopq.status
-    information['Queue Uptime'], information['Queue Starttime'] = dopq.uptime
-    information["Provider Status"] = dopq.provider.status
-    information['Provider Uptime'], information['Provider Starttime'] = dopq.provider.uptime
-
-    return information
-
 class QThreadWorker(QThread):
-    sig1 = pyqtSignal(dict)
-    sig2 = pyqtSignal(dict)
-    sig3 = pyqtSignal(dict)
+    sig1 = pyqtSignal(dict, bool)
+    sig2 = pyqtSignal(list)
+    sig3 = pyqtSignal(list)
+    sig4 = pyqtSignal(list)
+
     def __init__(self, dopq, parent=None):
         QThread.__init__(self, parent)
         self.dopq = dopq
+        self.status_display_info = []
+        self.running_cont_display_info = []
+
+
+    def fetch_history_info(self):
+        information = self.dopq.history
+
+
+        pass
+
+    def fetch_user_stats(self):
+        information = self.dopq.users_stats
+        return information
+
+
+    def fetch_running_containers_info(self):
+        information = []
+        containers = copy.copy(self.dopq.running_containers)
+        print("Number of Running containers: ", len(containers))
+        for container in self.dopq.running_containers:
+            print("container: ", container.container_stats())
+            information.append(container.container_stats())
+
+            # reformat gpu info
+            gpu_info = information[-1].pop('gpu', False)
+            if gpu_info:
+                minors, usages = [], []
+                for info in gpu_info:
+                    minors.append(info['id'])
+                    usages.append(info['usage'])
+                information[-1]['id'] = minors
+                information[-1]['usage'] = ''.join([str(usage) + '% ' for usage in usages])
+
+        return information
+
+
+    def fetch_enqueued_containers_info(self):
+        container_list = self.dopq.container_list
+        information = [container.history_info() for container in container_list]
+        print("Enqueued Information: ", information)
+        return information
+
+    def fetch_status_info(self):
+        information = {}
+        info_update = True
+        information['Queue Status'] = self.dopq.status
+
+        if information['Queue Status'] == 'running':
+            information['Queue Uptime'], information['Queue Starttime'] = self.dopq.uptime
+            information["Provider Status"] = self.dopq.provider.status
+            if information['Provider Status'] == 'running':
+                information['Provider Uptime'], information['Provider Starttime'] = self.dopq.provider.uptime
+            else:
+                information['Provider Uptime'], information['Provider Starttime'] = '', ''
+
+        else:
+            information['Queue Uptime'], information['Queue Starttime'] = '', ''
+            information['Provider Status'] = ''
+            information['Provider Uptime'], information['Provider Starttime'] = '', ''
+
+        return information, info_update
+
 
     def run(self):
         self.running = True
         while self.running:
-            self.sig1.emit(fetch_status_info(self.dopq))
-            self.sig2.emit(fetch_running_containers_info(self.dopq))
-            self.sig3.emit(fetch_enqueued_containers_info(self.dopq))
+            print("User Stats : ", self.dopq.users_stats)
+            status_info, isupdate = self.fetch_status_info()
+            running_cont_info = self.fetch_running_containers_info()
+            enqueued_cont_info = self.fetch_enqueued_containers_info()
+            user_stat = self.fetch_user_stats()
+            self.sig1.emit(status_info, isupdate)
+            self.sig2.emit(running_cont_info)
+            self.sig3.emit(enqueued_cont_info)
+            self.sig4.emit(user_stat)
             self.sleep(3)
 
 """ 
