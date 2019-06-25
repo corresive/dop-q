@@ -14,6 +14,7 @@ class QThreadWorker(QThread):
     sig2 = pyqtSignal(list)
     sig3 = pyqtSignal(list)
     sig4 = pyqtSignal(list)
+    sig5 = pyqtSignal(list)
 
     def __init__(self, dopq, parent=None):
         QThread.__init__(self, parent)
@@ -21,12 +22,24 @@ class QThreadWorker(QThread):
         self.status_display_info = []
         self.running_cont_display_info = []
 
-
     def fetch_history_info(self):
-        information = self.dopq.history
+        information = []
 
+        for container in self.dopq.history:
+            #print("Container History : ", container.container_stats())
+            information.append(container.container_stats())
 
-        pass
+            # reformat gpu info
+            gpu_info = information[-1].pop('gpu', False)
+            if gpu_info:
+                minors, usages = [], []
+                for info in gpu_info:
+                    minors.append(info['id'])
+                    usages.append(info['usage'])
+                information[-1]['id'] = minors
+                information[-1]['usage'] = ''.join([str(usage) + '% ' for usage in usages])
+
+        return information
 
     def fetch_user_stats(self):
         information = self.dopq.users_stats
@@ -53,12 +66,12 @@ class QThreadWorker(QThread):
 
         return information
 
-
     def fetch_enqueued_containers_info(self):
         container_list = self.dopq.container_list
         information = [container.history_info() for container in container_list]
         print("Enqueued Information: ", information)
         return information
+
 
     def fetch_status_info(self):
         information = {}
@@ -80,19 +93,21 @@ class QThreadWorker(QThread):
 
         return information, info_update
 
-
     def run(self):
         self.running = True
         while self.running:
-            print("User Stats : ", self.dopq.users_stats)
+            #print("History Info : ", self.fetch_history_info())
             status_info, isupdate = self.fetch_status_info()
             running_cont_info = self.fetch_running_containers_info()
             enqueued_cont_info = self.fetch_enqueued_containers_info()
             user_stat = self.fetch_user_stats()
+            dopq_history = self.fetch_history_info()
+
             self.sig1.emit(status_info, isupdate)
             self.sig2.emit(running_cont_info)
             self.sig3.emit(enqueued_cont_info)
             self.sig4.emit(user_stat)
+            self.sig5.emit(dopq_history)
             self.sleep(3)
 
 """ 

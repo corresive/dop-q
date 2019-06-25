@@ -41,9 +41,28 @@ class InterfacePyQT(Window):
     # Function for updating dock widgets
     # Data sent from QThread using signal
 
-    def update_history_widget(self):
+    def update_history_widget(self, data):
+        print("call is in History_widget_from_thread_test ")
+        list_widget = QListWidget()
+        cnt = 1
 
-        pass
+        for container in data:
+            html_text = css_layout.history_containers_richtext_formatting(container, cnt)
+            cnt += 1
+            qlistitem_obj = QListWidgetItem()
+            qlabel_obj = QLabel()
+            qlabel_obj.setText(html_text)
+            new_font = QFont("Arial", 16, QFont.Bold)
+            qlabel_obj.setFont(new_font)
+            qlabel_obj.adjustSize()
+
+            qlistitem_obj.setSizeHint(qlabel_obj.sizeHint())
+            list_widget.addItem(qlistitem_obj)
+            list_widget.setItemWidget(qlistitem_obj, qlabel_obj)
+
+        self.history_dock.setWidget(list_widget)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.history_dock)
+
 
     def update_user_status_widget_from_thread_test(self, data):
         print("call is in user_status_widget_from_thread_test ")
@@ -139,6 +158,7 @@ class InterfacePyQT(Window):
         self.thread_obj.sig4.connect(self.update_user_status_widget_from_thread_test)
         self.thread_obj.sig2.connect(self.update_runnning_widget_from_thread_test)
         self.thread_obj.sig3.connect(self.update_enqueue_widget_from_thread_test)
+        self.thread_obj.sig5.connect(self.update_history_widget)
 
 
         self.thread_obj.start()
