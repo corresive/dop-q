@@ -5,6 +5,7 @@ import traceback
 
 from curses import panel
 from utils import log, gpu
+from viewcontroller.base_viewcontroller import AbstractBaseViewController
 
 """
     Implements base_viewcontroller Class
@@ -22,7 +23,7 @@ __status__ = "Dev"
 LOG = log.get_module_log(__name__)
 
 
-class ParentWindow(object):
+class ParentWindow(AbstractBaseViewController):
     def __init__(self, screen, offset=0, indent=0, header=None):
         """
         Window wraps a curses window object to simplify and streamline navigating, formatting and writing in it

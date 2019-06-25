@@ -11,7 +11,6 @@ Created on Mon May 29 23:21:42 2017
 
 History:
     16.10.2017: Changed to python 2.7
-    14.03.2019: Code refactoring initiated	
 
 @author: markus
 """
@@ -27,20 +26,24 @@ import traceback
 import dill
 import docker
 import numpy as np
+import viewcontroller.gui_entry as UI
+import remote_connectivity.server as remote_connc
+
 from docker.errors import APIError
 from pathos.helpers import mp
 
 
 import helper_process as hp
 import provider
-from utils import interface
+from utils import interface_old
 from utils import log
 from utils.gpu import GPU, get_gpus_status
 
 
+
 class DopQ(hp.HelperProcess):
 
-    def __init__(self, configfile='config.ini', logfile='dopq.log', debug=False):
+    def __init__(self, configfile='config.ini', logfile='dopq.log', gui='curses', debug=False):
 
         # init logging
         self.logger = log.init_log(logfile)
@@ -50,6 +53,7 @@ class DopQ(hp.HelperProcess):
             self.write_default_config(configfile)
 
         # init member variables
+        self.gui_option = gui
         self.starttime = None
         self.client = docker.from_env()
         self.debug = debug
@@ -67,6 +71,8 @@ class DopQ(hp.HelperProcess):
 
         # init helper processes and classes
         self.queue = mp.Queue()
+        # Commented by Reza
+        #self.gpu_handler = gh.GPUHandler()
         self.provider = provider.Provider(self.config, self.queue)
 
         # build all non-existent directories, except the network container share
@@ -80,7 +86,7 @@ class DopQ(hp.HelperProcess):
         super(DopQ, self).__init__()
 
         # initialize interface as a thread (so that members of the queue are accessible by the interface)
-        self.thread = threading.Thread(target=self.run_queue)
+        self.interface_thread = threading.Thread(target=self.run_queue)
 
     @property
     def mapping(self):
@@ -124,7 +130,7 @@ class DopQ(hp.HelperProcess):
 
         if self.starttime is None:
             return 'not started'
-        elif self.thread.isAlive():
+        elif self.interface_thread.isAlive():
             return 'running'
         else:
             return 'terminated'
@@ -292,6 +298,13 @@ class DopQ(hp.HelperProcess):
 
         config.add_section('paths')
 
+        '''config.set('paths', 'container.dir', '/media/local/input_container/reception/')
+        config.set('paths', 'network.dir', '/media/temporary_network_share/')
+        config.set('paths', 'unzip.dir', '/media/local/input_container/unzipped/')
+        config.set('paths', 'log.dir', '/media/local/output_container/logging/')
+        config.set('paths', 'history.dir', './')
+        config.set('paths', 'failed.dir', '/media/local/output_container/failed/')'''
+
         config.set('paths', 'container.dir', '/home/rrahman/Desktop/LMU_AUGEN_REPO/DOPQ_Config_Folders/container')
         config.set('paths', 'network.dir', '/home/rrahman/Desktop/LMU_AUGEN_REPO/DOPQ_Config_Folders/network')
         config.set('paths', 'unzip.dir', '/home/rrahman/Desktop/LMU_AUGEN_REPO/DOPQ_Config_Folders/unzip')
@@ -306,7 +319,7 @@ class DopQ(hp.HelperProcess):
         config.set('queue', 'max.gpu.assignment', '1')
 
         config.add_section('docker')
-        config.set('docker', 'mount.volumes', '/media/data/expImages:/imgdir,/media/local/output_container:/outdir')
+        config.set('docker', 'mount.volumes', '/home/rrahman/Desktop/LMU_AUGEN_REPO/dopq_mount_folder:/imgdir,/home/rrahman/Desktop/LMU_AUGEN_REPO/dopq_mount_folder:/outdir')
         config.set('docker', 'remove', 'yes')
         config.set('docker', 'network.mode', 'host')
         config.set('docker', 'mem.limit', '32g')
@@ -392,16 +405,20 @@ class DopQ(hp.HelperProcess):
         GPU.stop_hardware_monitor()
         self.provider.stop()
         if self.status == 'running':
-            self.thread.join()
+            self.interface_thread.join()
 
     def start(self):
 
         try:
             self.starttime = time.time()
             #self.run_queue()
-            self.thread.start()
+            self.interface_thread.start()
             self.provider.start()
-            interface.run_interface(self)
+            #interface.run_interface(self)
+            remote_connc.PyroRemoteConnectivity(self)
+            UI.GUICreation(self)
+            #ui_obj.view_controller_creation()
+
         finally:
             self.stop()
 
@@ -438,8 +455,9 @@ class DopQ(hp.HelperProcess):
                 gpu = container.use_gpu
 
                 # keep cycling if container requires gpu but none are available
-                # Added by reza ... Use API from gpu instead of gpu_handler
+                # Commented by reza ... As gpu_handler should not be used
                 free_minors = get_gpus_status()
+                #free_minors = self.gpu_handler.free_minors
                 if len(free_minors) == 0 and gpu:
                     self.container_list.insert(0, container)
                     self.sleep()
@@ -480,6 +498,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="priority queue for running docker containers")
     parser.add_argument('-l', '--logfile', type=str, dest='logfile', metavar='filename', default='dopq.log')
     parser.add_argument('-c', '--config', type=str, dest='configfile', metavar='filename', default='config.ini')
+    parser.add_argument('-u', '--gui', type=str, default='pyqt')
     parser.add_argument('--debug', action='store_true')
 
     args = vars(parser.parse_args())

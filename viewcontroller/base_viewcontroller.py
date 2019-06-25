@@ -10,46 +10,63 @@ from abc import ABC, abstractmethod
 
 """
 
-__authors__ = "Md Rezaur Rahman, Ilia Manakov, Markus Rohm"
+__authors__ = "Md Rezaur Rahman, Ilja Manakov, Markus Rohm"
 __copyright__ = "Copyright 2019, The DopQ Project"
 __license__ = "GPL"
 __version__ = "1.0.1"
-__maintainer__ = "Reza, Ilia, Markus"
+__maintainer__ = "Reza, Ilja, Markus"
 __status__ = "Dev"
 
-class AbstractBaseViewController(ABC):
+
+class AbstractBaseViewController(object):
 
     def __init__(self):
         super().__init__()
 
     @abstractmethod
-    def base_window_creation(self, *args):
-        pass
-
-    '''@abstractmethod
-    def sub_window_creation(self, *args):
-        pass
-
-    @abstractmethod
-    def reset_window(self, *args):
+    def navigate(self, *args):
+        """
+        Moves the current cursor to another specific coordinate
+        :param args: Current cursor position as coordinate.
+        :return: New coordinate position
+        """
         pass
 
     @abstractmethod
-    def get_window_size(self, *args):
-        pass
-
-    def set_window_size(self, *args):
-        pass
-
-    @abstractmethod
-    def add_text_window(self, *args):
-        pass
-
-    @abstractmethod
-    def get_current_cursor_position(self, *args):
+    def add_string(self, *args):
+        """
+        Adding specific string/word in the display window.
+        Developer should change return type according to GUI requirement.
+        :param args: String to write, with text formatting as attributes
+        :return: cursor coordinates after writing the string.
+        """
         pass
 
     @abstractmethod
-    def navigate_cursor(self, *args):
+    def add_line(self, *args):
+        """
+        Writing a list of strings, each with their own formatting, onto a line in the window.
+        Developer should change return type according to GUI requirement.
+        :param args: List of strings with their formatting
+        :return: cursor coordinates after writing the strings.
+        """
         pass
-        '''
+
+    @abstractmethod
+    def refresh(self, *args):
+        """
+        Refresh the display window object
+        :param args:
+        :return: None
+        """
+        pass
+
+    @abstractmethod
+    def erase(self, *args):
+        """
+        Erase text from display window
+        :param args:
+        :return: None
+        """
+        pass
+
