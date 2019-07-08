@@ -9,6 +9,7 @@ from pyqt_interface import css_layout
 from PyQt5.QtCore import Qt
 from utils import log
 
+
 LOG = log.get_module_log(__name__)
 
 
@@ -28,15 +29,16 @@ def qt_main(dopq):
     sys.exit(app.exec_())
 
 
-
 class InterfacePyQT(Window):
     def __init__(self):
         super(InterfacePyQT, self).__init__()
         #self.dock_widget_list = self.initialize_subwindows()
         #self.dopq = dopq
         #self.subwindows = self.split_screen()
+        self.prev_history_containers = None
         self.prev_enqueued_containers = None
         self.prev_user_stat = None
+        self.height, self.width = self.screen_geometry_details()
 
     # Function for updating dock widgets
     # Data sent from QThread using signal
@@ -45,24 +47,24 @@ class InterfacePyQT(Window):
         print("call is in History_widget_from_thread_test ")
         list_widget = QListWidget()
         cnt = 1
+        if data is not None and data != self.prev_history_containers:
+            for container in data:
+                html_text = css_layout.history_containers_richtext_formatting(container, cnt)
+                cnt += 1
+                qlistitem_obj = QListWidgetItem()
+                qlabel_obj = QLabel()
+                qlabel_obj.setText(html_text)
+                new_font = QFont("Arial", 16, QFont.Bold)
+                qlabel_obj.setFont(new_font)
+                qlabel_obj.adjustSize()
 
-        for container in data:
-            html_text = css_layout.history_containers_richtext_formatting(container, cnt)
-            cnt += 1
-            qlistitem_obj = QListWidgetItem()
-            qlabel_obj = QLabel()
-            qlabel_obj.setText(html_text)
-            new_font = QFont("Arial", 16, QFont.Bold)
-            qlabel_obj.setFont(new_font)
-            qlabel_obj.adjustSize()
+                qlistitem_obj.setSizeHint(qlabel_obj.sizeHint())
+                list_widget.addItem(qlistitem_obj)
+                list_widget.setItemWidget(qlistitem_obj, qlabel_obj)
 
-            qlistitem_obj.setSizeHint(qlabel_obj.sizeHint())
-            list_widget.addItem(qlistitem_obj)
-            list_widget.setItemWidget(qlistitem_obj, qlabel_obj)
-
-        self.history_dock.setWidget(list_widget)
-        self.addDockWidget(Qt.RightDockWidgetArea, self.history_dock)
-
+            self.prev_history_containers = data
+            self.history_dock.setWidget(list_widget)
+            self.addDockWidget(Qt.RightDockWidgetArea, self.history_dock)
 
     def update_user_status_widget_from_thread_test(self, data):
         print("call is in user_status_widget_from_thread_test ")
@@ -83,7 +85,6 @@ class InterfacePyQT(Window):
                 list_widget.setItemWidget(qlistitem_obj, qlabel_obj)
 
             self.prev_user_stat = data
-
             self.user_stats_dock.setWidget(list_widget)
             self.addDockWidget(Qt.RightDockWidgetArea, self.user_stats_dock)
 
@@ -130,6 +131,11 @@ class InterfacePyQT(Window):
             self.addDockWidget(Qt.RightDockWidgetArea, self.enqueued_dock)
 
     def update_runnning_widget_from_thread_test(self, data):
+        """
+        Update the Running containers subwindow using available information.
+        :param data: A list of running containers info as a python dictionary.
+        :return: None
+        """
         print("call is in Running_widget_from_thread_test ")
         list_widget = QListWidget()
         cnt = 1

@@ -1,5 +1,4 @@
 import copy
-from collections import OrderedDict
 from PyQt5.QtCore import pyqtSignal, QThread
 
 from math import floor, ceil
@@ -7,7 +6,6 @@ from math import floor, ceil
 from utils import log
 
 LOG = log.get_module_log(__name__)
-
 
 class QThreadWorker(QThread):
     sig1 = pyqtSignal(dict, bool)
@@ -26,9 +24,9 @@ class QThreadWorker(QThread):
         information = []
 
         for container in self.dopq.history:
-            #print("Container History : ", container.container_stats())
-            information.append(container.container_stats())
+            information.append(container.container_stats(runtime_stats=False))
 
+            '''
             # reformat gpu info
             gpu_info = information[-1].pop('gpu', False)
             if gpu_info:
@@ -38,6 +36,7 @@ class QThreadWorker(QThread):
                     usages.append(info['usage'])
                 information[-1]['id'] = minors
                 information[-1]['usage'] = ''.join([str(usage) + '% ' for usage in usages])
+            '''
 
         return information
 
@@ -108,7 +107,7 @@ class QThreadWorker(QThread):
             self.sig3.emit(enqueued_cont_info)
             self.sig4.emit(user_stat)
             self.sig5.emit(dopq_history)
-            self.sleep(3)
+            #self.sleep(20)
 
 """ 
     Display class for DopQ Status information

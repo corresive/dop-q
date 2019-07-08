@@ -21,10 +21,10 @@ def history_containers_richtext_formatting(container, cnt):
     html_text += "<hr>"
     html_text += "<table>"
     html_text += "<tr>"
-    html_text += "<th width='25%'></th>"
-    html_text += "<th width='20%'></th>"
-    html_text += "<th width='25%'></th>"
-    html_text += "<th width='25%'></th>"
+    html_text += "<th width='18%'></th>"
+    html_text += "<th width='15%'></th>"
+    html_text += "<th width='18%'></th>"
+    html_text += "<th width='15%'></th>"
     html_text += "</tr>"
 
     html_text += "<tr>"
@@ -53,6 +53,7 @@ def history_containers_richtext_formatting(container, cnt):
         html_text += "<td> <p align='left'> <font color='Yellow'> <b>" + container['created'] + "</b></font></td>"
     html_text += "</tr>"
 
+    '''
     html_text += "<tr>"
     html_text += "<td> <p align='right'> CPU Usage: </td>"
     if container['cpu'] is None:
@@ -81,6 +82,7 @@ def history_containers_richtext_formatting(container, cnt):
     else:
         html_text += "<td> <p align='left'> <font color='Yellow'> <b>" + container['usage'] + "</b></font></td>"
     html_text += "</tr>"
+    '''
 
     html_text += "</table>"
 

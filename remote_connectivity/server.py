@@ -1,4 +1,3 @@
-import sys
 import Pyro4
 
 
@@ -14,6 +13,18 @@ class PyroRemoteConnectivity():
 
 
 def start_server(dopq):
+    print("Call in start_server")
+    custom_daemon = Pyro4.Daemon(host="localhost", nathost=9090)
+
+    # ------ alternatively, using serveSimple -----
+    Pyro4.Daemon.serveSimple(
+        {
+            PyroRemoteConnectivity: "remote_dopq"
+        },
+        ns=True, host="localhost", daemon=custom_daemon)
+
+'''
+def start_server(dopq):
     print("Inside Start Server ..")
     rmt_conn_obj = PyroRemoteConnectivity(dopq)
     daemon = Pyro4.Daemon()
@@ -23,3 +34,4 @@ def start_server(dopq):
 
     print("DopQ Server is Running and Ready ..... ")
     daemon.requestLoop()
+'''

@@ -21,13 +21,14 @@ import datetime
 import os
 import threading
 import time
+import Pyro4
 import traceback
 
 import dill
 import docker
 import numpy as np
 import viewcontroller.gui_entry as UI
-import remote_connectivity.server as remote_connc
+import remote_connectivity.json_creator as json_creator_obj
 
 from docker.errors import APIError
 from pathos.helpers import mp
@@ -40,7 +41,7 @@ from utils import log
 from utils.gpu import GPU, get_gpus_status
 
 
-
+@Pyro4.expose
 class DopQ(hp.HelperProcess):
 
     def __init__(self, configfile='config.ini', logfile='dopq.log', gui='curses', debug=False):
@@ -415,7 +416,8 @@ class DopQ(hp.HelperProcess):
             self.interface_thread.start()
             self.provider.start()
             #interface.run_interface(self)
-            remote_connc.PyroRemoteConnectivity(self)
+            #json_creator_obj.DopQToJsonConversion(self)
+            print("Call is in start method .....")
             UI.GUICreation(self)
             #ui_obj.view_controller_creation()
 
@@ -492,6 +494,38 @@ class DopQ(hp.HelperProcess):
             self.save('all')
 
 
+    def remote_conn_test_frm_diff_machine(self, str_data):
+        print("The data sent from client: ", str_data)
+
+'''
+def remote_connection_starter(dopq):
+    import Pyro4
+    print("Call is in remote connection starter")
+    custom_daemon = Pyro4.Daemon(host="10.167.183.184", natport=32553)
+
+    # ------ alternatively, using serveSimple -----
+    Pyro4.Daemon.serveSimple(
+        {
+            dopq: "remote_dopq"
+        },
+        ns=True, host="10.167.183.184", daemon=custom_daemon)
+
+'''
+
+
+def remote_connection_starter(dopq):
+    import Pyro4
+    Pyro4.config.HOST = "10.167.183.184"
+    Pyro4.config.NS_PORT = 9090
+    server_deamon = Pyro4.Daemon()
+    nameserver = Pyro4.locateNS()
+    uri = server_deamon.register(dopq)
+    nameserver.register("remote_dopq", uri)
+    print("Server URI is : ", uri)
+    server_deamon.requestLoop()
+
+
+
 if __name__ == '__main__':
     import argparse
 
@@ -504,4 +538,7 @@ if __name__ == '__main__':
     args = vars(parser.parse_args())
 
     dop_q = DopQ(**args)
-    dop_q.start()
+    # Test for running in Local Server
+    #dop_q.start()
+    # Test for running Pyro4 and establish client-server connection
+    remote_connection_starter(dop_q)
