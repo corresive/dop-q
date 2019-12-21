@@ -14,6 +14,6 @@ __Update History:__
 + 21.06.2019: Beta version of Pyqt4 interface has been integrated to the backend.
 + 18.07.2019: Decided to separate the docker priority queue and provider process completely from the interface. Agreed to implement the system in MVC fashion with client totally separated from the server.
 
-![pyqt4_ui](dopq_beta.png)|
+![pyqt4_ui](dopq_interface.png)|
 :---:|
 _**New Interface of DoPQ [Beta Version]**_.|
